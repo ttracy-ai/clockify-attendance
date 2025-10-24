@@ -105,6 +105,10 @@ export default function StudentsPage() {
 
     setUploadingPhotos(true);
     try {
+      // First, fetch current students from API
+      const studentsResponse = await fetch('/api/students');
+      const currentStudents: Student[] = await studentsResponse.json();
+
       const text = await file.text();
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, 'text/html');
@@ -124,7 +128,7 @@ export default function StudentsPage() {
           if (img && img.src && namePara.textContent) {
             const name = namePara.textContent.trim();
             // Try to find matching student by name
-            const matchingStudent = students.find(s =>
+            const matchingStudent = currentStudents.find(s =>
               s.name.toLowerCase() === name.toLowerCase()
             );
 
