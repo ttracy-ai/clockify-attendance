@@ -20,6 +20,7 @@ export default function StudentsPage() {
   const [uploading, setUploading] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [editingHour, setEditingHour] = useState<string | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -105,6 +106,32 @@ export default function StudentsPage() {
       alert('Failed to remove photo');
     } finally {
       setRemoving(null);
+    }
+  };
+
+  const handleUpdateHour = async (email: string, newHour: string) => {
+    try {
+      const response = await fetch('/api/students/update-hour', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, newHour }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setStudents(students.map(s =>
+          s.email === email ? { ...s, hour: newHour } : s
+        ));
+        setEditingHour(null);
+      } else {
+        const error = await response.json();
+        alert(`Failed to update hour: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating hour:', error);
+      alert('Failed to update hour');
     }
   };
 
@@ -550,9 +577,39 @@ export default function StudentsPage() {
                       <div className="font-medium text-neutral-200 mb-1 truncate" title={student.name}>
                         {student.name}
                       </div>
-                      <div className="text-xs text-neutral-400 truncate" title={student.email}>
+                      <div className="text-xs text-neutral-400 truncate mb-1" title={student.email}>
                         {student.email}
                       </div>
+
+                      {/* Hour selector */}
+                      {editingHour === student.email ? (
+                        <div className="flex items-center justify-center gap-1 mt-2">
+                          <select
+                            value={student.hour}
+                            onChange={(e) => handleUpdateHour(student.email, e.target.value)}
+                            className="text-xs bg-neutral-700 text-neutral-200 border border-neutral-600 rounded px-2 py-1"
+                            autoFocus
+                          >
+                            <option value="1">1st Hour</option>
+                            <option value="2">2nd Hour</option>
+                            <option value="3">3rd Hour</option>
+                            <option value="4">4th Hour</option>
+                          </select>
+                          <button
+                            onClick={() => setEditingHour(null)}
+                            className="text-xs text-neutral-400 hover:text-neutral-200"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setEditingHour(student.email)}
+                          className="text-xs text-brand-green-500 hover:text-brand-green-400 mt-1"
+                        >
+                          Hour {student.hour} ✏️
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
