@@ -78,6 +78,36 @@ export default function StudentsPage() {
     }
   };
 
+  const handleRemovePhoto = async (email: string) => {
+    setRemoving(email);
+    try {
+      const response = await fetch('/api/students/update-photos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          photoUpdates: [{ email, photo: null }]
+        }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setStudents(students.map(s =>
+          s.email === email ? { ...s, photo: null } : s
+        ));
+      } else {
+        const error = await response.json();
+        alert(`Failed to remove photo: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error removing photo:', error);
+      alert('Failed to remove photo');
+    } finally {
+      setRemoving(null);
+    }
+  };
+
   const handleClearRoster = async () => {
     if (!confirm('Are you sure you want to clear the ENTIRE roster? This will remove ALL students from ALL hours. This action cannot be undone!')) {
       return;
@@ -113,6 +143,10 @@ export default function StudentsPage() {
       // First, fetch current students from API
       const studentsResponse = await fetch('/api/students');
       const currentStudents: Student[] = await studentsResponse.json();
+
+      // Count how many are missing photos
+      const studentsWithoutPhotos = currentStudents.filter(s => !s.photo);
+      console.log(`${studentsWithoutPhotos.length} students are missing photos`);
 
       const text = await file.text();
       const parser = new DOMParser();
@@ -157,7 +191,8 @@ export default function StudentsPage() {
             s.name.toLowerCase() === name.toLowerCase()
           );
 
-          if (matchingStudent) {
+          // ONLY add photo if student doesn't already have one
+          if (matchingStudent && !matchingStudent.photo) {
             photoUpdates.push({
               email: matchingStudent.email,
               photo: img.src
@@ -166,8 +201,10 @@ export default function StudentsPage() {
         }
       }
 
+      console.log(`Found ${photoUpdates.length} photos to upload for students without photos`);
+
       if (photoUpdates.length === 0) {
-        alert('No valid photos found. Make sure the HTML has student names that match your roster.');
+        alert('All students already have photos! No updates needed.\n\nIf you want to replace existing photos, please remove them first.');
         setUploadingPhotos(false);
         return;
       }
@@ -463,7 +500,7 @@ export default function StudentsPage() {
                     key={student.email}
                     className="bg-neutral-900/50 border border-neutral-600 rounded-lg p-4 flex flex-col items-center relative group hover:border-neutral-500 transition-colors"
                   >
-                    {/* Remove Button */}
+                    {/* Remove Student Button */}
                     <button
                       onClick={() => handleRemoveStudent(student.email)}
                       disabled={removing === student.email}
@@ -476,6 +513,22 @@ export default function StudentsPage() {
                         '×'
                       )}
                     </button>
+
+                    {/* Remove Photo Button (only show if student has photo) */}
+                    {student.photo && (
+                      <button
+                        onClick={() => handleRemovePhoto(student.email)}
+                        disabled={removing === student.email}
+                        className="absolute -top-2 -right-11 w-7 h-7 bg-orange-500 hover:bg-orange-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold shadow-lg"
+                        title="Remove photo"
+                      >
+                        {removing === student.email ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        ) : (
+                          '🖼'
+                        )}
+                      </button>
+                    )}
 
                     {/* Photo */}
                     {student.photo ? (
