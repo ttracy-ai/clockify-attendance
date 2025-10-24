@@ -494,11 +494,11 @@ export default function StudentsPage() {
                 <p className="text-neutral-400">Loading students...</p>
               </div>
             ) : filteredStudents.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-3">
                 {filteredStudents.map((student) => (
                   <div
                     key={student.email}
-                    className="bg-neutral-900/50 border border-neutral-600 rounded-lg p-4 flex flex-col items-center relative group hover:border-neutral-500 transition-colors"
+                    className="bg-neutral-900/50 border border-neutral-600 rounded-lg p-3 flex flex-col items-center relative group hover:border-neutral-500 transition-colors"
                   >
                     {/* Remove Student Button */}
                     <button
@@ -535,11 +535,11 @@ export default function StudentsPage() {
                       <img
                         src={student.photo}
                         alt={student.name}
-                        className="w-32 h-32 rounded-lg object-cover border-2 border-neutral-600 mb-3 shadow-lg"
+                        className="w-24 h-24 rounded-lg object-cover border-2 border-neutral-600 mb-2 shadow-lg"
                       />
                     ) : (
-                      <div className="w-32 h-32 rounded-lg bg-neutral-700 flex items-center justify-center border-2 border-neutral-600 mb-3">
-                        <span className="text-neutral-400 font-bold text-4xl">
+                      <div className="w-24 h-24 rounded-lg bg-neutral-700 flex items-center justify-center border-2 border-neutral-600 mb-2">
+                        <span className="text-neutral-400 font-bold text-3xl">
                           {student.name.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>

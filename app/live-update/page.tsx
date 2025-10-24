@@ -96,10 +96,10 @@ export default function LiveUpdatePage() {
       return 15 * 1000;
     }
 
-    // Middle of class: refresh every 10 minutes
+    // Middle of class: refresh every 15 seconds
     setIsFirstTenMinutes(false);
     setIsLastTenMinutes(false);
-    return 10 * 60 * 1000;
+    return 15 * 1000;
   }, []);
 
   // Convert 24-hour time to 12-hour AM/PM format
@@ -176,6 +176,11 @@ export default function LiveUpdatePage() {
         const absentWithPhotos = data.absentStudents.map((email: string) => getStudentInfo(email));
         setAbsentStudents(absentWithPhotos);
         setLastUpdate(new Date());
+
+        // Reset countdown timer after successful update
+        const isManual = !detectedPeriod && !!manualPeriod;
+        const interval = getRefreshInterval(period, isManual);
+        setNextUpdateIn(Math.floor(interval / 1000));
       }
     } catch (error) {
       console.error('Error checking attendance:', error);
@@ -183,7 +188,7 @@ export default function LiveUpdatePage() {
       setLoading(false);
       setInitialLoad(false);
     }
-  }, [getCurrentPeriod, allStudents, getStudentInfo, manualPeriod]);
+  }, [getCurrentPeriod, allStudents, getStudentInfo, manualPeriod, getRefreshInterval]);
 
   // Initial check
   useEffect(() => {
