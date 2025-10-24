@@ -83,6 +83,9 @@ export async function POST(request: NextRequest) {
     // Save updated data to blob storage
     await saveStudents(updatedStudents);
 
+    // Wait a moment to ensure blob save fully propagates
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     return NextResponse.json({
       success: true,
       updatedCount,
