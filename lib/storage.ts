@@ -34,6 +34,7 @@ export async function saveStudents(students: Student[]): Promise<void> {
     const blob = await put(STUDENTS_BLOB_NAME, JSON.stringify(students, null, 2), {
       access: 'public',
       contentType: 'application/json',
+      addRandomSuffix: false,
     });
     console.log('Students saved to blob:', blob.url);
   } catch (error) {
