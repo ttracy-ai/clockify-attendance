@@ -35,6 +35,7 @@ export async function saveStudents(students: Student[]): Promise<void> {
       access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,
+      allowOverwrite: true,
     });
     console.log('Students saved to blob:', blob.url);
   } catch (error) {
