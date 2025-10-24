@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { getStudents, saveStudents } from '@/lib/storage';
 
+// Increase body size limit for photo uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 interface Student {
   name: string;
   email: string;
@@ -72,8 +81,6 @@ export async function POST(request: NextRequest) {
     });
 
     // Save updated data to blob storage
-    // Add a small delay between batches to reduce race conditions
-    await new Promise(resolve => setTimeout(resolve, 500));
     await saveStudents(updatedStudents);
 
     return NextResponse.json({

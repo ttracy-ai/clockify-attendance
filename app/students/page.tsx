@@ -172,60 +172,38 @@ export default function StudentsPage() {
         return;
       }
 
-      // Upload in batches to avoid Vercel's 4.5MB request limit
-      // Each batch should be under 4MB
-      const BATCH_SIZE = 25; // Roughly 25 photos * 73KB avg = ~1.8MB per batch
-      let totalUpdated = 0;
-      let totalNotFound = 0;
+      // Send ALL photos in a single request to avoid race conditions
+      // This is critical - batching causes photos to overwrite each other
+      console.log(`Uploading ${photoUpdates.length} photos in single request...`);
 
-      for (let i = 0; i < photoUpdates.length; i += BATCH_SIZE) {
-        const batch = photoUpdates.slice(i, i + BATCH_SIZE);
-        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-        const totalBatches = Math.ceil(photoUpdates.length / BATCH_SIZE);
+      const response = await fetch('/api/students/update-photos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photoUpdates }),
+      });
 
-        console.log(`Uploading batch ${batchNum}/${totalBatches} (${batch.length} photos)...`);
+      if (response.ok) {
+        const result = await response.json();
+        await loadStudents();
+        alert(`Photos uploaded successfully!\nUpdated: ${result.updatedCount}\nNot found: ${result.notFoundCount}\nTotal students: ${currentStudents.length}`);
+      } else {
+        // Try to parse as JSON, but if it fails, show the raw text
+        const contentType = response.headers.get('content-type');
+        let errorMessage = '';
 
-        // Wait a bit between batches to avoid race conditions
-        if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
-        const response = await fetch('/api/students/update-photos', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ photoUpdates: batch }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          totalUpdated += result.updatedCount;
-          totalNotFound += result.notFoundCount;
-          console.log(`Batch ${batchNum} complete: ${result.updatedCount} updated`);
+        if (contentType && contentType.includes('application/json')) {
+          const error = await response.json();
+          errorMessage = `${error.error}\n\nDetails: ${error.details || 'No details available'}`;
         } else {
-          // Try to parse as JSON, but if it fails, show the raw text
-          const contentType = response.headers.get('content-type');
-          let errorMessage = '';
-
-          if (contentType && contentType.includes('application/json')) {
-            const error = await response.json();
-            errorMessage = `${error.error}\n\nDetails: ${error.details || 'No details available'}`;
-          } else {
-            const text = await response.text();
-            errorMessage = `Server returned non-JSON response (${response.status}):\n\n${text.substring(0, 500)}`;
-          }
-
-          console.error('Server error:', errorMessage);
-          alert(`Failed to upload photos (batch ${batchNum}/${totalBatches}): ${errorMessage}`);
-          setUploadingPhotos(false);
-          event.target.value = '';
-          return;
+          const text = await response.text();
+          errorMessage = `Server returned non-JSON response (${response.status}):\n\n${text.substring(0, 500)}`;
         }
-      }
 
-      await loadStudents();
-      alert(`Photos uploaded successfully!\nUpdated: ${totalUpdated}\nNot found: ${totalNotFound}\nTotal students: ${currentStudents.length}`);
+        console.error('Server error:', errorMessage);
+        alert(`Failed to upload photos: ${errorMessage}`);
+      }
     } catch (error) {
       console.error('Error uploading photos:', error);
       alert(`Failed to upload photos: ${error instanceof Error ? error.message : 'Unknown error'}`);
