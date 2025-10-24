@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand Colors from Logo */
+  --brand-green: #8BC34A;
+  --brand-green-light: #9CCC65;
+  --brand-green-dark: #689F38;
+  --brand-green-darker: #558B2F;
+
+  /* Dark Theme Base - Pure Blacks and Grays */
+  --background: #0a0a0a;
+  --background-secondary: #1a1a1a;
+  --background-tertiary: #2a2a2a;
+
+  /* Text Colors */
+  --foreground: #f5f5f5;
+  --foreground-secondary: #d4d4d4;
+  --foreground-muted: #a3a3a3;
+
+  /* Accent Colors */
+  --accent-primary: var(--brand-green);
+  --accent-hover: var(--brand-green-light);
+  --border: #404040;
+  --border-light: #525252;
 }
 
 @theme inline {
@@ -10,13 +29,18 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Custom Brand Colors */
+  --color-brand-green-50: #f1f8e9;
+  --color-brand-green-100: #dcedc8;
+  --color-brand-green-200: #c5e1a5;
+  --color-brand-green-300: #aed581;
+  --color-brand-green-400: #9ccc65;
+  --color-brand-green-500: #8bc34a;
+  --color-brand-green-600: #7cb342;
+  --color-brand-green-700: #689f38;
+  --color-brand-green-800: #558b2f;
+  --color-brand-green-900: #33691e;
 }
 
 body {
