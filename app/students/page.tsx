@@ -119,25 +119,44 @@ export default function StudentsPage() {
 
       for (const cell of Array.from(cells)) {
         const paragraphs = cell.querySelectorAll('p');
+
+        // Try both formats:
+        // Format 1: Two paragraphs - name in first, image in second
+        // Format 2: One paragraph - name and image together
+
+        let name = '';
+        let img: HTMLImageElement | null = null;
+
         if (paragraphs.length >= 2) {
-          // First p should have name, second p should have img
+          // Format 1: name in first p, image in second p
           const namePara = paragraphs[0];
           const imgPara = paragraphs[1];
-          const img = imgPara.querySelector('img');
+          img = imgPara.querySelector('img');
 
-          if (img && img.src && namePara.textContent) {
-            const name = namePara.textContent.trim();
-            // Try to find matching student by name
-            const matchingStudent = currentStudents.find(s =>
-              s.name.toLowerCase() === name.toLowerCase()
-            );
+          if (img && namePara.textContent) {
+            name = namePara.textContent.trim();
+          }
+        } else if (paragraphs.length === 1) {
+          // Format 2: name and image in same paragraph
+          const para = paragraphs[0];
+          img = para.querySelector('img');
 
-            if (matchingStudent) {
-              photoUpdates.push({
-                email: matchingStudent.email,
-                photo: img.src
-              });
-            }
+          if (img && para.textContent) {
+            name = para.textContent.trim();
+          }
+        }
+
+        if (img && img.src && name) {
+          // Try to find matching student by name
+          const matchingStudent = currentStudents.find(s =>
+            s.name.toLowerCase() === name.toLowerCase()
+          );
+
+          if (matchingStudent) {
+            photoUpdates.push({
+              email: matchingStudent.email,
+              photo: img.src
+            });
           }
         }
       }
