@@ -19,6 +19,7 @@ export default function StudentsPage() {
   const [removing, setRemoving] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   useEffect(() => {
     loadStudents();
@@ -95,6 +96,53 @@ export default function StudentsPage() {
       alert('Failed to clear roster');
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleUploadPhotos = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhotos(true);
+    try {
+      const text = await file.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      const images = doc.querySelectorAll('img');
+
+      const photoUpdates = Array.from(images).map(img => ({
+        email: img.alt,
+        photo: img.src,
+      })).filter(update => update.email && update.photo);
+
+      if (photoUpdates.length === 0) {
+        alert('No valid photos found in HTML file. Make sure img tags have alt attributes with student emails.');
+        setUploadingPhotos(false);
+        return;
+      }
+
+      const response = await fetch('/api/students/update-photos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photoUpdates }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        await loadStudents();
+        alert(`Photos uploaded successfully!\nUpdated: ${result.updatedCount}\nNot found: ${result.notFoundCount}\nTotal students: ${result.totalStudents}`);
+      } else {
+        const error = await response.json();
+        alert(`Failed to upload photos: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error uploading photos:', error);
+      alert('Failed to upload photos');
+    } finally {
+      setUploadingPhotos(false);
+      event.target.value = '';
     }
   };
 
@@ -218,6 +266,33 @@ export default function StudentsPage() {
                     )}
                   </label>
                 </div>
+                <div>
+                  <input
+                    type="file"
+                    accept=".html,.htm"
+                    onChange={handleUploadPhotos}
+                    disabled={uploadingPhotos}
+                    className="hidden"
+                    id="photos-upload"
+                  />
+                  <label
+                    htmlFor="photos-upload"
+                    className={`inline-block px-6 py-3 rounded-lg font-medium transition-all cursor-pointer ${
+                      uploadingPhotos
+                        ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl'
+                    }`}
+                  >
+                    {uploadingPhotos ? (
+                      <span className="flex items-center">
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                        Uploading...
+                      </span>
+                    ) : (
+                      'Upload Student Photos'
+                    )}
+                  </label>
+                </div>
                 <button
                   onClick={handleClearRoster}
                   disabled={clearing || students.length === 0}
@@ -233,10 +308,14 @@ export default function StudentsPage() {
                   )}
                 </button>
               </div>
-              <div className="mt-4 bg-brand-green-500/10 border border-brand-green-500/50 rounded-lg p-3">
+              <div className="mt-4 bg-brand-green-500/10 border border-brand-green-500/50 rounded-lg p-3 space-y-2">
                 <p className="text-sm text-blue-300">
                   <span className="font-semibold">CSV Format:</span> Your CSV should have columns for email, name, and hour (1-4).
-                  Headers are optional. You can add photos later from the Live Update page.
+                  Headers are optional.
+                </p>
+                <p className="text-sm text-blue-300">
+                  <span className="font-semibold">Photos Format:</span> HTML file with img tags. Example: <code className="bg-neutral-900/50 px-1 rounded">&lt;img src="photo-url" alt="student@email.com"&gt;</code>
+                  The alt attribute must match the student's email.
                 </p>
               </div>
             </div>
