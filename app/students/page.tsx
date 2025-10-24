@@ -162,11 +162,12 @@ export default function StudentsPage() {
         alert(`Photos uploaded successfully!\nUpdated: ${result.updatedCount}\nNot found: ${result.notFoundCount}\nTotal students: ${result.totalStudents}`);
       } else {
         const error = await response.json();
-        alert(`Failed to upload photos: ${error.error}`);
+        console.error('Server error:', error);
+        alert(`Failed to upload photos: ${error.error}\n\nDetails: ${error.details || 'No details available'}`);
       }
     } catch (error) {
       console.error('Error uploading photos:', error);
-      alert('Failed to upload photos');
+      alert(`Failed to upload photos: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploadingPhotos(false);
       event.target.value = '';

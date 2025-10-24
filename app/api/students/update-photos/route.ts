@@ -81,10 +81,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating photos:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('Error details:', { message: errorMessage, stack: errorStack });
+
     return NextResponse.json(
       {
         error: 'Failed to update photos',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: errorMessage,
+        stack: errorStack
       },
       { status: 500 }
     );
