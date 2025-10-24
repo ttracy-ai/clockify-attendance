@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import fs from 'fs';
-import path from 'path';
+import { getStudents, saveStudents } from '@/lib/storage';
 
 interface Student {
   name: string;
@@ -30,17 +29,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read existing students
-    const studentsPath = path.join(process.cwd(), 'public', 'students.json');
-    let existingStudents: Student[] = [];
-
-    try {
-      const studentsData = fs.readFileSync(studentsPath, 'utf8');
-      existingStudents = JSON.parse(studentsData);
-    } catch (error) {
-      // File doesn't exist yet, that's okay
-      console.log('No existing students file, creating new one');
-    }
+    // Read existing students from blob storage
+    const existingStudents = await getStudents();
 
     // Merge logic:
     // - If student email exists, keep existing photo but update name/hour
@@ -88,8 +78,8 @@ export async function POST(request: NextRequest) {
       return a.name.localeCompare(b.name);
     });
 
-    // Save merged data
-    fs.writeFileSync(studentsPath, JSON.stringify(mergedStudents, null, 2));
+    // Save merged data to blob storage
+    await saveStudents(mergedStudents);
 
     return NextResponse.json({
       success: true,

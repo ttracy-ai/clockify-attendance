@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import fs from 'fs';
-import path from 'path';
+import { getStudents, saveStudents } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,18 +22,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read the students.json file
-    const studentsPath = path.join(process.cwd(), 'public', 'students.json');
-    const studentsData = fs.readFileSync(studentsPath, 'utf8');
-    const students = JSON.parse(studentsData);
+    // Read students from blob storage
+    const students = await getStudents();
 
     // Filter out the student
     const filteredStudents = students.filter(
       (s: any) => s.email.toLowerCase() !== email.toLowerCase()
     );
 
-    // Save back to file
-    fs.writeFileSync(studentsPath, JSON.stringify(filteredStudents, null, 2));
+    // Save back to blob storage
+    await saveStudents(filteredStudents);
 
     return NextResponse.json({
       success: true,

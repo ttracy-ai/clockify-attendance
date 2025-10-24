@@ -113,7 +113,7 @@ export default function LiveUpdatePage() {
 
   // Load student data
   useEffect(() => {
-    fetch('/students.json')
+    fetch('/api/students')
       .then(res => res.json())
       .then(data => {
         setAllStudents(data);

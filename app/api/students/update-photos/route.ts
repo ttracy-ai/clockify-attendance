@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import fs from 'fs';
-import path from 'path';
+import { getStudents, saveStudents } from '@/lib/storage';
 
 interface Student {
   name: string;
@@ -35,14 +34,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read existing students
-    const studentsPath = path.join(process.cwd(), 'public', 'students.json');
-    let students: Student[] = [];
+    // Read existing students from blob storage
+    const students = await getStudents();
 
-    try {
-      const studentsData = fs.readFileSync(studentsPath, 'utf8');
-      students = JSON.parse(studentsData);
-    } catch (error) {
+    if (students.length === 0) {
       return NextResponse.json(
         { error: 'Students file not found. Please upload student roster first.' },
         { status: 404 }
@@ -75,8 +70,8 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Save updated data
-    fs.writeFileSync(studentsPath, JSON.stringify(updatedStudents, null, 2));
+    // Save updated data to blob storage
+    await saveStudents(updatedStudents);
 
     return NextResponse.json({
       success: true,

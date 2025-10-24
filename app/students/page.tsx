@@ -26,7 +26,7 @@ export default function StudentsPage() {
 
   const loadStudents = async () => {
     try {
-      const response = await fetch('/students.json');
+      const response = await fetch('/api/students');
       const data = await response.json();
       setStudents(data);
       setLoading(false);

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import fs from 'fs';
-import path from 'path';
+import { saveStudents } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,9 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Clear the students.json file by writing an empty array
-    const studentsPath = path.join(process.cwd(), 'public', 'students.json');
-    fs.writeFileSync(studentsPath, JSON.stringify([], null, 2));
+    // Clear all students by saving an empty array to blob storage
+    await saveStudents([]);
 
     return NextResponse.json({
       success: true,
