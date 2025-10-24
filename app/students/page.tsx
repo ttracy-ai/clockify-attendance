@@ -108,15 +108,38 @@ export default function StudentsPage() {
       const text = await file.text();
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, 'text/html');
-      const images = doc.querySelectorAll('img');
 
-      const photoUpdates = Array.from(images).map(img => ({
-        email: img.alt,
-        photo: img.src,
-      })).filter(update => update.email && update.photo);
+      // Look for table cells with student info
+      const cells = doc.querySelectorAll('th, td');
+      const photoUpdates: Array<{email: string, photo: string}> = [];
+
+      for (const cell of Array.from(cells)) {
+        const paragraphs = cell.querySelectorAll('p');
+        if (paragraphs.length >= 2) {
+          // First p should have name, second p should have img
+          const namePara = paragraphs[0];
+          const imgPara = paragraphs[1];
+          const img = imgPara.querySelector('img');
+
+          if (img && img.src && namePara.textContent) {
+            const name = namePara.textContent.trim();
+            // Try to find matching student by name
+            const matchingStudent = students.find(s =>
+              s.name.toLowerCase() === name.toLowerCase()
+            );
+
+            if (matchingStudent) {
+              photoUpdates.push({
+                email: matchingStudent.email,
+                photo: img.src
+              });
+            }
+          }
+        }
+      }
 
       if (photoUpdates.length === 0) {
-        alert('No valid photos found in HTML file. Make sure img tags have alt attributes with student emails.');
+        alert('No valid photos found. Make sure the HTML has student names that match your roster.');
         setUploadingPhotos(false);
         return;
       }
@@ -314,8 +337,8 @@ export default function StudentsPage() {
                   Headers are optional.
                 </p>
                 <p className="text-sm text-blue-300">
-                  <span className="font-semibold">Photos Format:</span> HTML file with img tags. Example: <code className="bg-neutral-900/50 px-1 rounded">&lt;img src="photo-url" alt="student@email.com"&gt;</code>
-                  The alt attribute must match the student's email.
+                  <span className="font-semibold">Photos Format:</span> HTML file with student names and photos in table format.
+                  Student names in the HTML must match the names in your roster exactly.
                 </p>
               </div>
             </div>
