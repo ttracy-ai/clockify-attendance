@@ -58,7 +58,7 @@ export default function DashboardPage() {
       .catch(err => console.error('Failed to load workspaces:', err));
 
     // Load student data
-    fetch('/students.json')
+    fetch('/api/students')
       .then(res => res.json())
       .then(data => {
         setAllStudents(data);
