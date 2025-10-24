@@ -185,6 +185,11 @@ export default function StudentsPage() {
 
         console.log(`Uploading batch ${batchNum}/${totalBatches} (${batch.length} photos)...`);
 
+        // Wait a bit between batches to avoid race conditions
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
         const response = await fetch('/api/students/update-photos', {
           method: 'POST',
           headers: {

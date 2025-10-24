@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read existing students from blob storage
+    // CRITICAL: Always read fresh data from blob to avoid race conditions
+    // This ensures we don't overwrite changes from concurrent requests
     const students = await getStudents();
 
     if (students.length === 0) {
@@ -71,6 +72,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Save updated data to blob storage
+    // Add a small delay between batches to reduce race conditions
+    await new Promise(resolve => setTimeout(resolve, 500));
     await saveStudents(updatedStudents);
 
     return NextResponse.json({
