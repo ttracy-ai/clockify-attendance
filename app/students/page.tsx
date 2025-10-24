@@ -29,6 +29,11 @@ export default function StudentsPage() {
     try {
       const response = await fetch('/api/students');
       const data = await response.json();
+
+      // Debug: Count students with photos
+      const withPhotos = data.filter((s: Student) => s.photo).length;
+      console.log(`[DEBUG] Loaded ${data.length} students, ${withPhotos} have photos`);
+
       setStudents(data);
       setLoading(false);
     } catch (error) {
