@@ -215,21 +215,44 @@ export default function LiveUpdatePage() {
 
     // Pass isManual flag to getRefreshInterval
     const isManual = !currentPeriod && !!manualPeriod;
-    const interval = getRefreshInterval(activePeriod, isManual);
-    const timer = setInterval(() => {
+    let currentInterval = getRefreshInterval(activePeriod, isManual);
+    let timer = setInterval(() => {
       checkAttendance();
-    }, interval);
+    }, currentInterval);
+
+    // Check every 30 seconds if we've transitioned to a different timing zone
+    const zoneCheckTimer = setInterval(() => {
+      const newInterval = getRefreshInterval(activePeriod, isManual);
+
+      // If interval has changed (we've moved to a different time zone)
+      if (newInterval !== currentInterval) {
+        // Clear the old timer
+        clearInterval(timer);
+
+        // Immediately check attendance with new interval
+        checkAttendance();
+
+        // Set up new timer with updated interval
+        currentInterval = newInterval;
+        timer = setInterval(() => {
+          checkAttendance();
+        }, currentInterval);
+
+        setNextUpdateIn(Math.floor(currentInterval / 1000));
+      }
+    }, 30 * 1000); // Check every 30 seconds
 
     // Update countdown every second
     const countdownTimer = setInterval(() => {
       setNextUpdateIn(prev => Math.max(0, prev - 1));
     }, 1000);
 
-    setNextUpdateIn(Math.floor(interval / 1000));
+    setNextUpdateIn(Math.floor(currentInterval / 1000));
 
     return () => {
       clearInterval(timer);
       clearInterval(countdownTimer);
+      clearInterval(zoneCheckTimer);
     };
   }, [currentPeriod, manualPeriod, getCurrentPeriod, checkAttendance, getRefreshInterval]);
 
