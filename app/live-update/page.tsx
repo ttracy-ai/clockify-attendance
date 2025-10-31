@@ -96,10 +96,10 @@ export default function LiveUpdatePage() {
       return 15 * 1000;
     }
 
-    // Middle of class: refresh every 15 seconds
+    // Middle of class: refresh every 10 minutes
     setIsFirstTenMinutes(false);
     setIsLastTenMinutes(false);
-    return 15 * 1000;
+    return 10 * 60 * 1000;
   }, []);
 
   // Convert 24-hour time to 12-hour AM/PM format
@@ -364,7 +364,7 @@ export default function LiveUpdatePage() {
                   <p className="text-neutral-400">{initialLoad ? 'Loading attendance data...' : 'Checking Clockify entries...'}</p>
                 </div>
               ) : absentStudents.length > 0 ? (
-                <div className="grid gap-8 w-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                <div className="grid gap-4 w-full" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 200px))' }}>
                   {absentStudents.map((student, index) => (
                     <div
                       key={index}
