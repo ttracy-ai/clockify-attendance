@@ -387,7 +387,7 @@ export default function LiveUpdatePage() {
                   <p className="text-neutral-400">{initialLoad ? 'Loading attendance data...' : 'Checking Clockify entries...'}</p>
                 </div>
               ) : absentStudents.length > 0 ? (
-                <div className="grid gap-4 w-full" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 200px))' }}>
+                <div className="grid gap-4 w-full" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 160px))' }}>
                   {absentStudents.map((student, index) => (
                     <div
                       key={index}
