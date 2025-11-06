@@ -18,6 +18,24 @@ export interface WorkspaceConfig {
 
 const STUDENTS_BLOB_NAME = 'students.json';
 const WORKSPACES_BLOB_NAME = 'workspaces.json';
+const GRADES_CACHE_BLOB_NAME = 'grades-cache.json';
+
+export interface GradesCache {
+  calculatedDate: string; // ISO date string (YYYY-MM-DD)
+  startDate: string;
+  endDate: string;
+  data: StudentGradeData[];
+}
+
+export interface StudentGradeData {
+  name: string;
+  email: string;
+  hour: string;
+  daysPresent: number;
+  totalDays: number;
+  percentage: number;
+  photo: string | null;
+}
 
 export async function getStudents(): Promise<Student[]> {
   try {
@@ -131,6 +149,40 @@ export async function saveWorkspaces(workspaces: WorkspaceConfig[]): Promise<voi
     console.log('Workspaces saved to blob:', blob.url);
   } catch (error) {
     console.error('Error saving workspaces to blob:', error);
+    throw error;
+  }
+}
+
+export async function getGradesCache(): Promise<GradesCache | null> {
+  try {
+    const { blobs } = await list();
+    const gradesBlob = blobs.find(blob => blob.pathname === GRADES_CACHE_BLOB_NAME);
+
+    if (!gradesBlob) {
+      console.log('No grades cache found');
+      return null;
+    }
+
+    const response = await fetch(gradesBlob.url);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error reading grades cache from blob:', error);
+    return null;
+  }
+}
+
+export async function saveGradesCache(cache: GradesCache): Promise<void> {
+  try {
+    const blob = await put(GRADES_CACHE_BLOB_NAME, JSON.stringify(cache, null, 2), {
+      access: 'public',
+      contentType: 'application/json',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    });
+    console.log('Grades cache saved to blob:', blob.url);
+  } catch (error) {
+    console.error('Error saving grades cache to blob:', error);
     throw error;
   }
 }
