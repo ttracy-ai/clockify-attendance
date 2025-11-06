@@ -26,16 +26,10 @@ interface ClassPeriod {
   workspaceId: string;
 }
 
-const CLASS_PERIODS: ClassPeriod[] = [
-  { hour: '1', label: '1st Hour', startTime: '08:20', endTime: '09:20', workspaceId: '68ab4631cdd3100648caf4ed' },
-  { hour: '2', label: '2nd Hour', startTime: '09:30', endTime: '11:00', workspaceId: '68ab4b8ee201a71118cd502b' },
-  { hour: '3', label: '3rd Hour', startTime: '12:00', endTime: '13:10', workspaceId: '68ab4d83d138cb5f24c57310' },
-  { hour: '4', label: '4th Hour', startTime: '13:15', endTime: '14:40', workspaceId: '68ab4e24e201a71118cd5084' },
-];
-
 export default function LiveUpdatePage() {
   const router = useRouter();
   const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [classPeriods, setClassPeriods] = useState<ClassPeriod[]>([]);
   const [absentStudents, setAbsentStudents] = useState<StudentWithPhoto[]>([]);
   const [currentPeriod, setCurrentPeriod] = useState<ClassPeriod | null>(null);
   const [manualPeriod, setManualPeriod] = useState<ClassPeriod | null>(null);
@@ -48,16 +42,18 @@ export default function LiveUpdatePage() {
 
   // Determine which class period we're in
   const getCurrentPeriod = useCallback((): ClassPeriod | null => {
+    if (classPeriods.length === 0) return null;
+
     const now = new Date();
     const currentTime = format(now, 'HH:mm');
 
-    for (const period of CLASS_PERIODS) {
+    for (const period of classPeriods) {
       if (currentTime >= period.startTime && currentTime <= period.endTime) {
         return period;
       }
     }
     return null;
-  }, []);
+  }, [classPeriods]);
 
   // Calculate refresh interval based on time within class period
   const getRefreshInterval = useCallback((period: ClassPeriod, isManual: boolean = false): number => {
@@ -111,8 +107,24 @@ export default function LiveUpdatePage() {
     return `${hour12}:${minutes} ${ampm}`;
   };
 
-  // Load student data
+  // Load workspace configuration and student data
   useEffect(() => {
+    // Load workspaces
+    fetch('/api/workspaces')
+      .then(res => res.json())
+      .then(data => {
+        const periods: ClassPeriod[] = (data.workspaces || []).map((ws: any) => ({
+          hour: ws.hour,
+          label: ws.label,
+          startTime: ws.startTime,
+          endTime: ws.endTime,
+          workspaceId: ws.id,
+        }));
+        setClassPeriods(periods);
+      })
+      .catch(err => console.error('Failed to load workspaces:', err));
+
+    // Load students
     fetch('/api/students')
       .then(res => res.json())
       .then(data => {
@@ -351,7 +363,7 @@ export default function LiveUpdatePage() {
               <div className="max-w-2xl mx-auto mt-8">
                 <h3 className="text-lg font-semibold text-white mb-4">Or Select a Period Manually:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {CLASS_PERIODS.map(period => (
+                  {classPeriods.map(period => (
                     <button
                       key={period.hour}
                       onClick={() => handleManualPeriodSelect(period)}

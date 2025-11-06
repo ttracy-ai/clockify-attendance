@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
+import { getWorkspaces, saveWorkspaces, WorkspaceConfig } from '@/lib/storage';
 
 export async function GET() {
   try {
@@ -12,34 +13,55 @@ export async function GET() {
       );
     }
 
-    const workspaces = [
-      {
-        id: process.env.CLOCKIFY_WORKSPACE_1ST_HOUR,
-        name: 'FALL 25 1st Hour',
-        label: '1st Hour',
-      },
-      {
-        id: process.env.CLOCKIFY_WORKSPACE_2ND_HOUR,
-        name: 'FALL 25 2nd Hour',
-        label: '2nd Hour',
-      },
-      {
-        id: process.env.CLOCKIFY_WORKSPACE_3RD_HOUR,
-        name: 'FALL 25 3rd Hour',
-        label: '3rd Hour',
-      },
-      {
-        id: process.env.CLOCKIFY_WORKSPACE_4TH_HOUR,
-        name: 'FALL 25 4th Hour',
-        label: '4th Hour',
-      },
-    ].filter(ws => ws.id); // Filter out any undefined workspaces
+    const workspaces = await getWorkspaces();
 
     return NextResponse.json({ workspaces });
   } catch (error) {
     console.error('Error fetching workspaces:', error);
     return NextResponse.json(
       { error: 'Failed to fetch workspaces' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Check authentication
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { workspaces }: { workspaces: WorkspaceConfig[] } = await request.json();
+
+    if (!Array.isArray(workspaces)) {
+      return NextResponse.json(
+        { error: 'Invalid request. Workspaces array required.' },
+        { status: 400 }
+      );
+    }
+
+    // Validate workspace structure
+    for (const ws of workspaces) {
+      if (!ws.id || !ws.name || !ws.label || !ws.hour || !ws.startTime || !ws.endTime) {
+        return NextResponse.json(
+          { error: 'Invalid workspace structure. All fields required.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    await saveWorkspaces(workspaces);
+
+    return NextResponse.json({ success: true, workspaces });
+  } catch (error) {
+    console.error('Error saving workspaces:', error);
+    return NextResponse.json(
+      { error: 'Failed to save workspaces' },
       { status: 500 }
     );
   }

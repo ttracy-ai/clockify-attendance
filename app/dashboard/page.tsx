@@ -25,6 +25,9 @@ interface Workspace {
   id: string;
   name: string;
   label: string;
+  hour: string;
+  startTime: string;
+  endTime: string;
 }
 
 interface Student {
@@ -68,24 +71,17 @@ export default function DashboardPage() {
 
   // Update student emails when workspace changes
   useEffect(() => {
-    if (!selectedWorkspace || allStudents.length === 0) return;
+    if (!selectedWorkspace || allStudents.length === 0 || workspaces.length === 0) return;
 
-    // Map workspace ID to hour number
-    const workspaceHourMap: Record<string, string> = {
-      '68ab4631cdd3100648caf4ed': '1',  // 1st Hour
-      '68ab4b8ee201a71118cd502b': '2',  // 2nd Hour
-      '68ab4d83d138cb5f24c57310': '3',  // 3rd Hour
-      '68ab4e24e201a71118cd5084': '4',  // 4th Hour
-    };
-
-    const hour = workspaceHourMap[selectedWorkspace];
-    if (hour) {
+    // Find the workspace by ID and get its hour
+    const workspace = workspaces.find(ws => ws.id === selectedWorkspace);
+    if (workspace) {
       const studentsForHour = allStudents
-        .filter(s => s.hour === hour)
+        .filter(s => s.hour === workspace.hour)
         .map(s => s.email);
       setStudentEmails(studentsForHour);
     }
-  }, [selectedWorkspace, allStudents]);
+  }, [selectedWorkspace, allStudents, workspaces]);
 
   const getStudentInfo = (email: string): StudentWithPhoto => {
     const student = allStudents.find(s => s.email.toLowerCase() === email.toLowerCase());

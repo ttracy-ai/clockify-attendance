@@ -21,6 +21,7 @@ export default function Header({ currentPage }: HeaderProps) {
     { name: 'Live Update', path: '/live-update' },
     { name: 'CSV Manager', path: '/csv-manager' },
     { name: 'Manage Students', path: '/students' },
+    { name: 'Manage Workspaces', path: '/workspaces' },
   ];
 
   return (
