@@ -20,6 +20,7 @@ interface GradesResponse {
   cached: boolean;
   calculatedDate: string;
   message?: string;
+  error?: string;
 }
 
 export default function GradesPage() {
