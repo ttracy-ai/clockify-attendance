@@ -39,6 +39,8 @@ export default function LiveUpdatePage() {
   const [nextUpdateIn, setNextUpdateIn] = useState<number>(0);
   const [isFirstTenMinutes, setIsFirstTenMinutes] = useState(false);
   const [isLastTenMinutes, setIsLastTenMinutes] = useState(false);
+  const [rapidRefreshMode, setRapidRefreshMode] = useState(false);
+  const [rapidRefreshEndTime, setRapidRefreshEndTime] = useState<Date | null>(null);
 
   // Determine which class period we're in
   const getCurrentPeriod = useCallback((): ClassPeriod | null => {
@@ -57,6 +59,19 @@ export default function LiveUpdatePage() {
 
   // Calculate refresh interval based on time within class period
   const getRefreshInterval = useCallback((period: ClassPeriod, isManual: boolean = false): number => {
+    // If rapid refresh mode is active, use 15 seconds
+    if (rapidRefreshMode && rapidRefreshEndTime && new Date() < rapidRefreshEndTime) {
+      setIsFirstTenMinutes(false);
+      setIsLastTenMinutes(false);
+      return 15 * 1000;
+    }
+
+    // If rapid refresh time expired, turn it off
+    if (rapidRefreshMode && rapidRefreshEndTime && new Date() >= rapidRefreshEndTime) {
+      setRapidRefreshMode(false);
+      setRapidRefreshEndTime(null);
+    }
+
     // If manual mode, always use 10 minutes
     if (isManual) {
       setIsFirstTenMinutes(false);
@@ -96,7 +111,7 @@ export default function LiveUpdatePage() {
     setIsFirstTenMinutes(false);
     setIsLastTenMinutes(false);
     return 10 * 60 * 1000;
-  }, []);
+  }, [rapidRefreshMode, rapidRefreshEndTime]);
 
   // Convert 24-hour time to 12-hour AM/PM format
   const convertTo12Hour = (time24: string): string => {
@@ -274,6 +289,15 @@ export default function LiveUpdatePage() {
     setTimeout(() => checkAttendance(), 100);
   };
 
+  const handleRapidRefresh = () => {
+    const endTime = new Date();
+    endTime.setMinutes(endTime.getMinutes() + 5);
+    setRapidRefreshMode(true);
+    setRapidRefreshEndTime(endTime);
+    // Immediately trigger an update
+    checkAttendance();
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
@@ -290,30 +314,31 @@ export default function LiveUpdatePage() {
         {/* Main Content */}
         <main className="px-6 py-8">
           {/* Status Bar */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
-              <div className="text-xs text-neutral-400 mb-1">Current Period</div>
-              <div className="text-lg font-bold text-white">
-                {currentPeriod ? (
-                  <>
-                    {currentPeriod.label}
-                    <span className="ml-2 text-xs bg-brand-green-500/20 text-green-400 px-2 py-0.5 rounded">LIVE</span>
-                  </>
-                ) : manualPeriod ? (
-                  <>
-                    {manualPeriod.label}
-                    <span className="ml-2 text-xs bg-brand-brand-green-500/20 text-brand-green-400 px-2 py-0.5 rounded">MANUAL</span>
-                  </>
-                ) : (
-                  'No Class'
+          <div className="mb-6 flex items-center justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
+              <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
+                <div className="text-xs text-neutral-400 mb-1">Current Period</div>
+                <div className="text-lg font-bold text-white">
+                  {currentPeriod ? (
+                    <>
+                      {currentPeriod.label}
+                      <span className="ml-2 text-xs bg-brand-green-500/20 text-green-400 px-2 py-0.5 rounded">LIVE</span>
+                    </>
+                  ) : manualPeriod ? (
+                    <>
+                      {manualPeriod.label}
+                      <span className="ml-2 text-xs bg-brand-brand-green-500/20 text-brand-green-400 px-2 py-0.5 rounded">MANUAL</span>
+                    </>
+                  ) : (
+                    'No Class'
+                  )}
+                </div>
+                {(currentPeriod || manualPeriod) && (
+                  <div className="text-xs text-neutral-500 mt-1">
+                    {(currentPeriod || manualPeriod)!.startTime} - {(currentPeriod || manualPeriod)!.endTime}
+                  </div>
                 )}
               </div>
-              {(currentPeriod || manualPeriod) && (
-                <div className="text-xs text-neutral-500 mt-1">
-                  {(currentPeriod || manualPeriod)!.startTime} - {(currentPeriod || manualPeriod)!.endTime}
-                </div>
-              )}
-            </div>
 
             <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
               <div className="text-xs text-neutral-400 mb-1">Last Updated</div>
@@ -325,15 +350,42 @@ export default function LiveUpdatePage() {
               </div>
             </div>
 
-            <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
-              <div className="text-xs text-neutral-400 mb-1">Refresh Rate</div>
-              <div className="text-base font-bold text-white">
-                {!currentPeriod && manualPeriod ? '10m' : isFirstTenMinutes ? '30s' : isLastTenMinutes ? '15s' : '10m'}
-              </div>
-              <div className="text-xs text-neutral-500 mt-1">
-                {!currentPeriod && manualPeriod ? 'Manual mode' : isFirstTenMinutes ? 'First 10 min' : isLastTenMinutes ? 'Last 10 min' : 'Mid-class'}
+              <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
+                <div className="text-xs text-neutral-400 mb-1">Refresh Rate</div>
+                <div className="text-base font-bold text-white">
+                  {rapidRefreshMode ? '15s' : !currentPeriod && manualPeriod ? '10m' : isFirstTenMinutes ? '30s' : isLastTenMinutes ? '15s' : '10m'}
+                </div>
+                <div className="text-xs text-neutral-500 mt-1">
+                  {rapidRefreshMode ? 'Rapid mode' : !currentPeriod && manualPeriod ? 'Manual mode' : isFirstTenMinutes ? 'First 10 min' : isLastTenMinutes ? 'Last 10 min' : 'Mid-class'}
+                </div>
               </div>
             </div>
+
+            {/* Rapid Refresh Button */}
+            <button
+              onClick={handleRapidRefresh}
+              disabled={rapidRefreshMode}
+              className="ml-4 p-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border-2 border-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
+              title="Activate 15-second refresh for 5 minutes"
+            >
+              {rapidRefreshMode ? (
+                <svg
+                  className="w-6 h-6 text-red-400 animate-pulse"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                </svg>
+              ) : (
+                <svg
+                  className="w-6 h-6 text-red-500 group-hover:text-red-400 transition-colors"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
+            </button>
           </div>
 
           {/* Not In Class Message / Manual Selection */}
