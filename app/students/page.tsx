@@ -23,6 +23,7 @@ export default function StudentsPage() {
   const [editingHour, setEditingHour] = useState<string | null>(null);
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; email: string } | null>(null);
+  const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -108,6 +109,49 @@ export default function StudentsPage() {
       alert('Failed to remove photo');
     } finally {
       setRemoving(null);
+    }
+  };
+
+  const handleUploadSinglePhoto = async (email: string, file: File) => {
+    setUploadingPhotoFor(email);
+    try {
+      // Convert image to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target?.result as string;
+
+        const response = await fetch('/api/students/update-photos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            photoUpdates: [{ email, photo: base64Data }]
+          }),
+        });
+
+        if (response.ok) {
+          // Update local state
+          setStudents(students.map(s =>
+            s.email === email ? { ...s, photo: base64Data } : s
+          ));
+        } else {
+          const error = await response.json();
+          alert(`Failed to upload photo: ${error.error}`);
+        }
+        setUploadingPhotoFor(null);
+      };
+
+      reader.onerror = () => {
+        alert('Failed to read image file');
+        setUploadingPhotoFor(null);
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Failed to upload photo');
+      setUploadingPhotoFor(null);
     }
   };
 
@@ -584,6 +628,33 @@ export default function StudentsPage() {
                       >
                         ✏️
                       </button>
+
+                      {/* Upload Photo Button */}
+                      <button
+                        onClick={() => document.getElementById(`photo-upload-${student.email}`)?.click()}
+                        disabled={uploadingPhotoFor === student.email}
+                        className="w-7 h-7 bg-purple-500 hover:bg-purple-600 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold shadow-lg"
+                        title="Upload photo"
+                      >
+                        {uploadingPhotoFor === student.email ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        ) : (
+                          '📷'
+                        )}
+                      </button>
+                      <input
+                        type="file"
+                        id={`photo-upload-${student.email}`}
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleUploadSinglePhoto(student.email, file);
+                          }
+                          e.target.value = '';
+                        }}
+                      />
 
                       {/* Remove Photo Button (only show if student has photo) */}
                       {student.photo && (
