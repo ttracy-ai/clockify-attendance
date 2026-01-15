@@ -21,6 +21,8 @@ export default function StudentsPage() {
   const [clearing, setClearing] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [editingHour, setEditingHour] = useState<string | null>(null);
+  const [editingStudent, setEditingStudent] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ name: string; email: string } | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -132,6 +134,51 @@ export default function StudentsPage() {
     } catch (error) {
       console.error('Error updating hour:', error);
       alert('Failed to update hour');
+    }
+  };
+
+  const handleEditStudent = (student: Student) => {
+    setEditingStudent(student.email);
+    setEditForm({ name: student.name, email: student.email });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingStudent(null);
+    setEditForm(null);
+  };
+
+  const handleSaveEdit = async (oldEmail: string) => {
+    if (!editForm) return;
+
+    try {
+      const response = await fetch('/api/students/update-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          oldEmail,
+          newName: editForm.name,
+          newEmail: editForm.email,
+        }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setStudents(students.map(s =>
+          s.email === oldEmail
+            ? { ...s, name: editForm.name, email: editForm.email }
+            : s
+        ));
+        setEditingStudent(null);
+        setEditForm(null);
+      } else {
+        const error = await response.json();
+        alert(`Failed to update student: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating student:', error);
+      alert('Failed to update student');
     }
   };
 
@@ -525,37 +572,49 @@ export default function StudentsPage() {
                 {filteredStudents.map((student) => (
                   <div
                     key={student.email}
-                    className="bg-neutral-900/50 border border-neutral-600 rounded-lg p-3 flex flex-col items-center relative group hover:border-neutral-500 transition-colors"
+                    className="bg-neutral-900/50 border border-neutral-600 rounded-lg p-3 flex flex-col items-center relative group hover:border-neutral-500 transition-colors hover:z-10"
                   >
-                    {/* Remove Student Button */}
-                    <button
-                      onClick={() => handleRemoveStudent(student.email)}
-                      disabled={removing === student.email}
-                      className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold shadow-lg"
-                      title="Remove student"
-                    >
-                      {removing === student.email ? (
-                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      ) : (
-                        '×'
-                      )}
-                    </button>
-
-                    {/* Remove Photo Button (only show if student has photo) */}
-                    {student.photo && (
+                    {/* Action Buttons Container - shown on hover */}
+                    <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {/* Edit Button */}
                       <button
-                        onClick={() => handleRemovePhoto(student.email)}
+                        onClick={() => handleEditStudent(student)}
+                        className="w-7 h-7 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg"
+                        title="Edit student"
+                      >
+                        ✏️
+                      </button>
+
+                      {/* Remove Photo Button (only show if student has photo) */}
+                      {student.photo && (
+                        <button
+                          onClick={() => handleRemovePhoto(student.email)}
+                          disabled={removing === student.email}
+                          className="w-7 h-7 bg-orange-500 hover:bg-orange-600 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold shadow-lg"
+                          title="Remove photo"
+                        >
+                          {removing === student.email ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                          ) : (
+                            '🖼'
+                          )}
+                        </button>
+                      )}
+
+                      {/* Remove Student Button */}
+                      <button
+                        onClick={() => handleRemoveStudent(student.email)}
                         disabled={removing === student.email}
-                        className="absolute -top-2 -right-11 w-7 h-7 bg-orange-500 hover:bg-orange-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold shadow-lg"
-                        title="Remove photo"
+                        className="w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold shadow-lg"
+                        title="Remove student"
                       >
                         {removing === student.email ? (
                           <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
                         ) : (
-                          '🖼'
+                          '×'
                         )}
                       </button>
-                    )}
+                    </div>
 
                     {/* Photo */}
                     {student.photo ? (
@@ -574,41 +633,78 @@ export default function StudentsPage() {
 
                     {/* Info */}
                     <div className="w-full text-center">
-                      <div className="font-medium text-neutral-200 mb-1 truncate" title={student.name}>
-                        {student.name}
-                      </div>
-                      <div className="text-xs text-neutral-400 truncate mb-1" title={student.email}>
-                        {student.email}
-                      </div>
-
-                      {/* Hour selector */}
-                      {editingHour === student.email ? (
-                        <div className="flex items-center justify-center gap-1 mt-2">
-                          <select
-                            value={student.hour}
-                            onChange={(e) => handleUpdateHour(student.email, e.target.value)}
-                            className="text-xs bg-neutral-700 text-neutral-200 border border-neutral-600 rounded px-2 py-1"
-                            autoFocus
-                          >
-                            <option value="1">1st Hour</option>
-                            <option value="2">2nd Hour</option>
-                            <option value="3">3rd Hour</option>
-                            <option value="4">4th Hour</option>
-                          </select>
-                          <button
-                            onClick={() => setEditingHour(null)}
-                            className="text-xs text-neutral-400 hover:text-neutral-200"
-                          >
-                            ✕
-                          </button>
+                      {editingStudent === student.email && editForm ? (
+                        // Edit Mode
+                        <div className="space-y-2 mt-2">
+                          <input
+                            type="text"
+                            value={editForm.name}
+                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                            className="w-full text-xs bg-neutral-700 text-neutral-200 border border-neutral-600 rounded px-2 py-1"
+                            placeholder="Name"
+                          />
+                          <input
+                            type="email"
+                            value={editForm.email}
+                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                            className="w-full text-xs bg-neutral-700 text-neutral-200 border border-neutral-600 rounded px-2 py-1"
+                            placeholder="Email"
+                          />
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleSaveEdit(student.email)}
+                              className="flex-1 px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="flex-1 px-2 py-1 bg-neutral-600 hover:bg-neutral-700 text-white text-xs rounded"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => setEditingHour(student.email)}
-                          className="text-xs text-brand-green-500 hover:text-brand-green-400 mt-1"
-                        >
-                          Hour {student.hour} ✏️
-                        </button>
+                        // View Mode
+                        <>
+                          <div className="font-medium text-neutral-200 mb-1 truncate" title={student.name}>
+                            {student.name}
+                          </div>
+                          <div className="text-xs text-neutral-400 truncate mb-1" title={student.email}>
+                            {student.email}
+                          </div>
+
+                          {/* Hour selector */}
+                          {editingHour === student.email ? (
+                            <div className="flex items-center justify-center gap-1 mt-2">
+                              <select
+                                value={student.hour}
+                                onChange={(e) => handleUpdateHour(student.email, e.target.value)}
+                                className="text-xs bg-neutral-700 text-neutral-200 border border-neutral-600 rounded px-2 py-1"
+                                autoFocus
+                              >
+                                <option value="1">1st Hour</option>
+                                <option value="2">2nd Hour</option>
+                                <option value="3">3rd Hour</option>
+                                <option value="4">4th Hour</option>
+                              </select>
+                              <button
+                                onClick={() => setEditingHour(null)}
+                                className="text-xs text-neutral-400 hover:text-neutral-200"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setEditingHour(student.email)}
+                              className="text-xs text-brand-green-500 hover:text-brand-green-400 mt-1"
+                            >
+                              Hour {student.hour} ✏️
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
