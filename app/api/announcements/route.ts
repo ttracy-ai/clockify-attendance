@@ -7,7 +7,14 @@ export async function GET() {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
 
   if (!email || !privateKey || !calendarId) {
-    return NextResponse.json({ error: 'Missing Google Calendar configuration' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Missing Google Calendar configuration',
+      missing: {
+        GOOGLE_SERVICE_ACCOUNT_EMAIL: !email,
+        GOOGLE_PRIVATE_KEY: !privateKey,
+        GOOGLE_CALENDAR_ID: !calendarId,
+      }
+    }, { status: 500 });
   }
 
   try {
