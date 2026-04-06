@@ -64,6 +64,27 @@ export default function Header({ currentPage }: HeaderProps) {
 
         {/* Right side buttons */}
         <div className="flex items-center space-x-3">
+          {/* Announcements Icon Button */}
+          <button
+            onClick={() => router.push('/announcements')}
+            className="p-2 text-neutral-400 hover:text-brand-green-400 border border-neutral-600 hover:border-brand-green-600 rounded-lg transition-colors"
+            title="Announcements"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+              />
+            </svg>
+          </button>
+
           {/* Grades Icon Button */}
           <button
             onClick={() => router.push('/grades')}
