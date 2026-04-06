@@ -113,51 +113,47 @@ export default function AnnouncementsPage() {
           )}
 
           {!loading && upcomingEvents.length > 0 && (
-            <div className="space-y-4 mb-8">
+            <div className="space-y-2 mb-8">
               {upcomingEvents.map((event) => {
                 const status = getEventStatus(event.start);
                 return (
                   <div
                     key={event.id}
-                    className={`bg-neutral-900/50 backdrop-blur-xl rounded-2xl border p-6 transition-colors ${
+                    className={`bg-neutral-900/50 backdrop-blur-xl rounded-xl border px-5 py-3 transition-colors ${
                       status === 'today'
                         ? 'border-brand-green-500/50 bg-brand-green-500/5'
                         : 'border-neutral-700/50'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          {status === 'today' && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-brand-green-500/20 text-brand-green-400 rounded-full border border-brand-green-500/30">
-                              Today
-                            </span>
-                          )}
-                          <h2 className="text-lg font-semibold text-white">{event.title}</h2>
-                        </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {status === 'today' && (
+                          <span className="px-2 py-0.5 text-xs font-semibold bg-brand-green-500/20 text-brand-green-400 rounded-full border border-brand-green-500/30 flex-shrink-0">
+                            Today
+                          </span>
+                        )}
+                        <h2 className="text-sm font-semibold text-white truncate">{event.title}</h2>
+                        {event.description && (
+                          <span className="text-sm text-neutral-400 truncate hidden sm:block">— {event.description}</span>
+                        )}
+                      </div>
 
-                        <p className="text-sm text-neutral-400 mb-3 flex items-center gap-1.5">
-                          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {formatEventDate(event.start, event.allDay)}
-                        </p>
-
+                      <div className="flex items-center gap-3 flex-shrink-0 text-sm text-neutral-400">
                         {event.location && (
-                          <p className="text-sm text-neutral-400 mb-3 flex items-center gap-1.5">
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <span className="hidden md:flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             {event.location}
-                          </p>
+                          </span>
                         )}
-
-                        {event.description && (
-                          <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-wrap">
-                            {event.description}
-                          </p>
-                        )}
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {formatEventDate(event.start, event.allDay)}
+                        </span>
                       </div>
                     </div>
                   </div>
