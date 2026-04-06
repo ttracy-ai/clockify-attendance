@@ -14,12 +14,24 @@ interface CalendarEvent {
   location: string | null;
 }
 
+function getClassHour(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const time = hours * 60 + minutes;
+
+  if (time === 8 * 60) return '1st Hour';
+  if (time === 10 * 60) return '2nd Hour';
+  if (time === 12 * 60) return '3rd Hour';
+  if (time === 13 * 60) return '4th Hour';
+  return format(date, 'h:mm a');
+}
+
 function formatEventDate(start: string | null, allDay: boolean): string {
   if (!start) return 'No date';
   try {
     const date = parseISO(start);
     if (allDay) return format(date, 'EEEE, MMMM d, yyyy');
-    return format(date, 'EEEE, MMMM d, yyyy · h:mm a');
+    return `${format(date, 'EEEE, MMMM d, yyyy')} · ${getClassHour(date)}`;
   } catch {
     return start;
   }
