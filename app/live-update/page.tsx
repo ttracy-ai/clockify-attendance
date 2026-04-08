@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, isToday, parseISO } from 'date-fns';
 import Header from '@/components/Header';
 
 interface Student {
@@ -28,6 +28,25 @@ interface ClassPeriod {
   endRapidMinutes: number;
 }
 
+interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  start: string | null;
+  allDay: boolean;
+}
+
+// Maps a calendar event's start time to a class hour number (1–4)
+function getHourFromEventTime(start: string): string | null {
+  const date = parseISO(start);
+  const time = date.getHours() * 60 + date.getMinutes();
+  if (time === 8 * 60)  return '1';
+  if (time === 10 * 60) return '2';
+  if (time === 12 * 60) return '3';
+  if (time === 13 * 60) return '4';
+  return null;
+}
+
 export default function LiveUpdatePage() {
   const router = useRouter();
   const [allStudents, setAllStudents] = useState<Student[]>([]);
@@ -44,6 +63,7 @@ export default function LiveUpdatePage() {
   const [rapidRefreshMode, setRapidRefreshMode] = useState(false);
   const [rapidRefreshEndTime, setRapidRefreshEndTime] = useState<Date | null>(null);
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [announcements, setAnnouncements] = useState<CalendarEvent[]>([]);
 
   // Determine which class period we're in
   const getCurrentPeriod = useCallback((): ClassPeriod | null => {
@@ -151,6 +171,14 @@ export default function LiveUpdatePage() {
         setAllStudents(data);
       })
       .catch(err => console.error('Failed to load students:', err));
+
+    // Load announcements
+    fetch('/api/announcements')
+      .then(res => res.json())
+      .then(data => {
+        setAnnouncements(data.events || []);
+      })
+      .catch(err => console.error('Failed to load announcements:', err));
   }, []);
 
   // Get student info with photo
@@ -321,6 +349,34 @@ export default function LiveUpdatePage() {
           className="px-6 py-8 transition-[padding-top] duration-300 ease-in-out"
           style={{ paddingTop: headerVisible ? '96px' : '24px' }}
         >
+          {/* Today's Announcements for active period */}
+          {(() => {
+            const activePeriod = currentPeriod || manualPeriod;
+            if (!activePeriod) return null;
+            const periodAnnouncements = announcements.filter(e => {
+              if (!e.start) return false;
+              if (!isToday(parseISO(e.start))) return false;
+              if (e.allDay) return true;
+              return getHourFromEventTime(e.start) === activePeriod.hour;
+            });
+            if (periodAnnouncements.length === 0) return null;
+            return (
+              <div className="mb-3 bg-brand-green-500/5 border border-brand-green-500/30 rounded-xl px-4 py-2.5 flex flex-col gap-1.5">
+                {periodAnnouncements.map(e => (
+                  <div key={e.id} className="flex items-baseline gap-2">
+                    <svg className="w-3.5 h-3.5 text-brand-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                    </svg>
+                    <span className="text-sm font-semibold text-white">{e.title}</span>
+                    {e.description && (
+                      <span className="text-sm text-neutral-400 truncate">— {e.description}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           {/* Status Bar */}
           <div className="mb-4 flex items-center gap-3">
             <div className="flex items-center gap-2 bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 px-3 py-1.5">
