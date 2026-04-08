@@ -414,10 +414,11 @@ export default function LiveUpdatePage() {
 
           {/* Students Missing Clockify */}
           {(currentPeriod || manualPeriod) && (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bg-neutral-800/50 backdrop-blur-xl rounded-2xl border-2 border-brand-green-500/30 p-6">
+              <div className="flex items-center justify-center gap-2 mb-5">
                 <span className="w-2 h-2 bg-brand-green-500 rounded-full animate-pulse shadow shadow-brand-green-500/50"></span>
-                <span className="text-sm font-semibold text-brand-green-400">Missing Clockify Entry Today</span>
+                <span className="text-lg font-semibold text-brand-green-400">Missing Clockify Entry Today</span>
+                <span className="w-2 h-2 bg-brand-green-500 rounded-full animate-pulse shadow shadow-brand-green-500/50"></span>
               </div>
 
               {initialLoad || loading ? (
@@ -426,11 +427,11 @@ export default function LiveUpdatePage() {
                   <p className="text-neutral-400">{initialLoad ? 'Loading attendance data...' : 'Checking Clockify entries...'}</p>
                 </div>
               ) : absentStudents.length > 0 ? (
-                <div className="grid gap-4 w-full" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 160px))' }}>
+                <div className="flex flex-wrap justify-center gap-4">
                   {absentStudents.map((student, index) => (
                     <div
                       key={index}
-                      className="flex flex-col items-center group"
+                      className="flex flex-col items-center group w-[140px]"
                     >
                       {student.photo ? (
                         <img
