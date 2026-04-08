@@ -322,74 +322,45 @@ export default function LiveUpdatePage() {
           style={{ paddingTop: headerVisible ? '96px' : '24px' }}
         >
           {/* Status Bar */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
-              <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
-                <div className="text-xs text-neutral-400 mb-1">Current Period</div>
-                <div className="text-lg font-bold text-white">
-                  {currentPeriod ? (
-                    <>
-                      {currentPeriod.label}
-                      <span className="ml-2 text-xs bg-brand-green-500/20 text-green-400 px-2 py-0.5 rounded">LIVE</span>
-                    </>
-                  ) : manualPeriod ? (
-                    <>
-                      {manualPeriod.label}
-                      <span className="ml-2 text-xs bg-brand-brand-green-500/20 text-brand-green-400 px-2 py-0.5 rounded">MANUAL</span>
-                    </>
-                  ) : (
-                    'No Class'
-                  )}
-                </div>
-                {(currentPeriod || manualPeriod) && (
-                  <div className="text-xs text-neutral-500 mt-1">
-                    {(currentPeriod || manualPeriod)!.startTime} - {(currentPeriod || manualPeriod)!.endTime}
-                  </div>
-                )}
-              </div>
-
-            <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
-              <div className="text-xs text-neutral-400 mb-1">Last Updated</div>
-              <div className="text-base font-bold text-white">
-                {format(lastUpdate, 'h:mm:ss a')}
-              </div>
-              <div className="text-xs text-neutral-500 mt-1">
-                Next update in {nextUpdateIn}s
-              </div>
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 px-3 py-1.5">
+              <span className="text-xs text-neutral-400">Period:</span>
+              <span className="text-xs font-semibold text-white">
+                {currentPeriod ? currentPeriod.label : manualPeriod ? manualPeriod.label : 'No Class'}
+              </span>
+              {currentPeriod && <span className="text-xs bg-brand-green-500/20 text-green-400 px-1.5 py-0.5 rounded">LIVE</span>}
+              {!currentPeriod && manualPeriod && <span className="text-xs bg-neutral-700 text-neutral-300 px-1.5 py-0.5 rounded">MANUAL</span>}
             </div>
 
-              <div className="bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 p-3">
-                <div className="text-xs text-neutral-400 mb-1">Refresh Rate</div>
-                <div className="text-base font-bold text-white">
-                  {rapidRefreshMode ? '15s' : !currentPeriod && manualPeriod ? '10m' : isFirstTenMinutes ? '30s' : isLastTenMinutes ? '15s' : '10m'}
-                </div>
-                <div className="text-xs text-neutral-500 mt-1">
-                  {rapidRefreshMode ? 'Rapid mode' : !currentPeriod && manualPeriod ? 'Manual mode' : isFirstTenMinutes ? 'First 10 min' : isLastTenMinutes ? 'Last 10 min' : 'Mid-class'}
-                </div>
-              </div>
+            <div className="flex items-center gap-2 bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 px-3 py-1.5">
+              <span className="text-xs text-neutral-400">Updated:</span>
+              <span className="text-xs font-semibold text-white">{format(lastUpdate, 'h:mm:ss a')}</span>
+              <span className="text-xs text-neutral-500">· next in {nextUpdateIn}s</span>
+            </div>
+
+            <div className="flex items-center gap-2 bg-neutral-800/50 backdrop-blur-xl rounded-lg border border-neutral-700/50 px-3 py-1.5">
+              <span className="text-xs text-neutral-400">Refresh:</span>
+              <span className="text-xs font-semibold text-white">
+                {rapidRefreshMode ? '15s' : !currentPeriod && manualPeriod ? '10m' : isFirstTenMinutes ? '30s' : isLastTenMinutes ? '15s' : '10m'}
+              </span>
+              <span className="text-xs text-neutral-500">
+                ({rapidRefreshMode ? 'rapid' : !currentPeriod && manualPeriod ? 'manual' : isFirstTenMinutes ? 'start' : isLastTenMinutes ? 'end' : 'mid'})
+              </span>
             </div>
 
             {/* Rapid Refresh Button */}
             <button
               onClick={handleRapidRefresh}
               disabled={rapidRefreshMode}
-              className="ml-4 p-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border-2 border-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
+              className="p-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 border-2 border-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
               title="Activate 15-second refresh for 5 minutes"
             >
               {rapidRefreshMode ? (
-                <svg
-                  className="w-6 h-6 text-red-400 animate-pulse"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-4 h-4 text-red-400 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                 </svg>
               ) : (
-                <svg
-                  className="w-6 h-6 text-red-500 group-hover:text-red-400 transition-colors"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-4 h-4 text-red-500 group-hover:text-red-400 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               )}
