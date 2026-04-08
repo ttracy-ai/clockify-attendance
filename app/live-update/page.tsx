@@ -24,6 +24,8 @@ interface ClassPeriod {
   startTime: string;
   endTime: string;
   workspaceId: string;
+  startRapidMinutes: number;
+  endRapidMinutes: number;
 }
 
 export default function LiveUpdatePage() {
@@ -93,15 +95,15 @@ export default function LiveUpdatePage() {
     const minutesIntoClass = currentMinutes - startMinutes;
     const minutesUntilEnd = endMinutes - currentMinutes;
 
-    // First 10 minutes: refresh every 30 seconds
-    if (minutesIntoClass <= 10) {
+    // First N minutes: refresh every 30 seconds
+    if (minutesIntoClass <= period.startRapidMinutes) {
       setIsFirstTenMinutes(true);
       setIsLastTenMinutes(false);
       return 30 * 1000;
     }
 
-    // Last 10 minutes: refresh every 15 seconds
-    if (minutesUntilEnd <= 10) {
+    // Last N minutes: refresh every 15 seconds
+    if (minutesUntilEnd <= period.endRapidMinutes) {
       setIsFirstTenMinutes(false);
       setIsLastTenMinutes(true);
       return 15 * 1000;
@@ -134,6 +136,8 @@ export default function LiveUpdatePage() {
           startTime: ws.startTime,
           endTime: ws.endTime,
           workspaceId: ws.id,
+          startRapidMinutes: ws.startRapidMinutes ?? 10,
+          endRapidMinutes: ws.endRapidMinutes ?? 10,
         }));
         setClassPeriods(periods);
       })

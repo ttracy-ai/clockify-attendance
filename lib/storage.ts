@@ -14,6 +14,8 @@ export interface WorkspaceConfig {
   hour: string;
   startTime: string;
   endTime: string;
+  startRapidMinutes?: number; // minutes at start of class with fast refresh (default 10)
+  endRapidMinutes?: number;   // minutes at end of class with fast refresh (default 10)
 }
 
 const STUDENTS_BLOB_NAME = 'students.json';
@@ -82,6 +84,8 @@ function getDefaultWorkspaces(): WorkspaceConfig[] {
       hour: '1',
       startTime: '08:20',
       endTime: '09:20',
+      startRapidMinutes: 10,
+      endRapidMinutes: 10,
     },
     {
       id: process.env.CLOCKIFY_WORKSPACE_2ND_HOUR || '',
@@ -90,6 +94,8 @@ function getDefaultWorkspaces(): WorkspaceConfig[] {
       hour: '2',
       startTime: '09:30',
       endTime: '11:00',
+      startRapidMinutes: 10,
+      endRapidMinutes: 10,
     },
     {
       id: process.env.CLOCKIFY_WORKSPACE_3RD_HOUR || '',
@@ -98,6 +104,8 @@ function getDefaultWorkspaces(): WorkspaceConfig[] {
       hour: '3',
       startTime: '12:00',
       endTime: '13:10',
+      startRapidMinutes: 10,
+      endRapidMinutes: 10,
     },
     {
       id: process.env.CLOCKIFY_WORKSPACE_4TH_HOUR || '',
@@ -106,6 +114,8 @@ function getDefaultWorkspaces(): WorkspaceConfig[] {
       hour: '4',
       startTime: '13:15',
       endTime: '14:40',
+      startRapidMinutes: 10,
+      endRapidMinutes: 10,
     },
   ].filter(ws => ws.id); // Filter out any workspaces without IDs
 }

@@ -57,9 +57,10 @@ export default function Header({ currentPage }: HeaderProps) {
     }
   };
 
-  const handleTimeChange = (index: number, field: 'startTime' | 'endTime', value: string) => {
+  const handleRapidChange = (index: number, field: 'startRapidMinutes' | 'endRapidMinutes', value: string) => {
+    const parsed = Math.max(1, Math.min(60, parseInt(value) || 1));
     const updated = [...workspaces];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: parsed };
     setWorkspaces(updated);
   };
 
@@ -191,8 +192,8 @@ export default function Header({ currentPage }: HeaderProps) {
           <div className="relative bg-neutral-900 border border-neutral-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-semibold text-white">Class Period Times</h2>
-                <p className="text-xs text-neutral-500 mt-0.5">Controls smart refresh on the Live Update page</p>
+                <h2 className="text-lg font-semibold text-white">Rapid Refresh Windows</h2>
+                <p className="text-xs text-neutral-500 mt-0.5">How many minutes at the start/end of each period to use fast refresh</p>
               </div>
               <button onClick={() => setShowSettings(false)} className="text-neutral-500 hover:text-white transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,29 +208,40 @@ export default function Header({ currentPage }: HeaderProps) {
               </div>
             ) : (
               <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 mb-1 px-1">
+                  <div className="text-xs text-neutral-500 text-center">First N min → 30s refresh</div>
+                  <div className="text-xs text-neutral-500 text-center">Last N min → 15s refresh</div>
+                </div>
                 {workspaces.map((ws, index) => (
                   <div key={ws.hour} className="bg-neutral-800/60 rounded-xl p-4">
-                    <div className="text-sm font-semibold text-white mb-3">{ws.label}</div>
+                    <div className="text-sm font-semibold text-white mb-3">
+                      {ws.label}
+                      <span className="ml-2 text-xs font-normal text-neutral-500">
+                        {convertTo12Hour(ws.startTime)} – {convertTo12Hour(ws.endTime)}
+                      </span>
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs text-neutral-400 mb-1">Start</label>
+                        <label className="block text-xs text-neutral-400 mb-1">Start window (min)</label>
                         <input
-                          type="time"
-                          value={ws.startTime}
-                          onChange={e => handleTimeChange(index, 'startTime', e.target.value)}
+                          type="number"
+                          min={1}
+                          max={60}
+                          value={ws.startRapidMinutes ?? 10}
+                          onChange={e => handleRapidChange(index, 'startRapidMinutes', e.target.value)}
                           className="w-full bg-neutral-900 border border-neutral-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-green-500"
                         />
-                        <div className="text-xs text-neutral-500 mt-1">{convertTo12Hour(ws.startTime)}</div>
                       </div>
                       <div>
-                        <label className="block text-xs text-neutral-400 mb-1">End</label>
+                        <label className="block text-xs text-neutral-400 mb-1">End window (min)</label>
                         <input
-                          type="time"
-                          value={ws.endTime}
-                          onChange={e => handleTimeChange(index, 'endTime', e.target.value)}
+                          type="number"
+                          min={1}
+                          max={60}
+                          value={ws.endRapidMinutes ?? 10}
+                          onChange={e => handleRapidChange(index, 'endRapidMinutes', e.target.value)}
                           className="w-full bg-neutral-900 border border-neutral-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-green-500"
                         />
-                        <div className="text-xs text-neutral-500 mt-1">{convertTo12Hour(ws.endTime)}</div>
                       </div>
                     </div>
                   </div>
