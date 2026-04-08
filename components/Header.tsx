@@ -15,6 +15,8 @@ interface WorkspaceConfig {
   hour: string;
   startTime: string;
   endTime: string;
+  startRapidMinutes?: number;
+  endRapidMinutes?: number;
 }
 
 function convertTo12Hour(time24: string): string {
