@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 interface HeaderProps {
   currentPage: string;
+  collapsible?: boolean;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 interface WorkspaceConfig {
@@ -28,9 +30,57 @@ function convertTo12Hour(time24: string): string {
   return `${hour12}:${minutes} ${ampm}`;
 }
 
-export default function Header({ currentPage }: HeaderProps) {
+export default function Header({ currentPage, collapsible, onVisibilityChange }: HeaderProps) {
   const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
+
+  // Collapsible header state
+  const [isVisible, setIsVisible] = useState(true);
+  const isVisibleRef = useRef(true);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showHeader = useCallback(() => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+    if (!isVisibleRef.current) {
+      isVisibleRef.current = true;
+      setIsVisible(true);
+      onVisibilityChange?.(true);
+    }
+  }, [onVisibilityChange]);
+
+  const scheduleHide = useCallback(() => {
+    if (hideTimerRef.current) return;
+    hideTimerRef.current = setTimeout(() => {
+      isVisibleRef.current = false;
+      setIsVisible(false);
+      onVisibilityChange?.(false);
+      hideTimerRef.current = null;
+    }, 3000);
+  }, [onVisibilityChange]);
+
+  useEffect(() => {
+    if (!collapsible) return;
+
+    // Start the initial hide timer
+    scheduleHide();
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.clientY < 80) {
+        showHeader();
+      } else if (isVisibleRef.current) {
+        scheduleHide();
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, [collapsible, showHeader, scheduleHide]);
   const [workspaces, setWorkspaces] = useState<WorkspaceConfig[]>([]);
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -103,7 +153,11 @@ export default function Header({ currentPage }: HeaderProps) {
 
   return (
     <>
-      <header className="border-b border-neutral-700/50 bg-neutral-800/30 backdrop-blur-xl">
+      <header className={`border-b border-neutral-700/50 bg-neutral-800/30 backdrop-blur-xl transition-transform duration-300 ease-in-out ${
+        collapsible
+          ? `fixed top-0 inset-x-0 z-50 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`
+          : ''
+      }`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-6">
             {/* Logo and Title */}

@@ -43,6 +43,7 @@ export default function LiveUpdatePage() {
   const [isLastTenMinutes, setIsLastTenMinutes] = useState(false);
   const [rapidRefreshMode, setRapidRefreshMode] = useState(false);
   const [rapidRefreshEndTime, setRapidRefreshEndTime] = useState<Date | null>(null);
+  const [headerVisible, setHeaderVisible] = useState(true);
 
   // Determine which class period we're in
   const getCurrentPeriod = useCallback((): ClassPeriod | null => {
@@ -313,10 +314,13 @@ export default function LiveUpdatePage() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
       <div className="relative">
-        <Header currentPage="Live Update" />
+        <Header currentPage="Live Update" collapsible onVisibilityChange={setHeaderVisible} />
 
         {/* Main Content */}
-        <main className="px-6 py-8">
+        <main
+          className="px-6 py-8 transition-[padding-top] duration-300 ease-in-out"
+          style={{ paddingTop: headerVisible ? '96px' : '24px' }}
+        >
           {/* Status Bar */}
           <div className="mb-6 flex items-center justify-between">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
