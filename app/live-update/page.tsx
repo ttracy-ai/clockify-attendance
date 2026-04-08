@@ -414,14 +414,10 @@ export default function LiveUpdatePage() {
 
           {/* Students Missing Clockify */}
           {(currentPeriod || manualPeriod) && (
-            <div className="bg-neutral-800/50 backdrop-blur-xl rounded-2xl border-2 border-brand-green-500/30 p-8">
-              <div className="bg-brand-green-500/10 border-2 border-brand-green-500/50 rounded-xl p-4 mb-6">
-                <h2 className="text-4xl font-bold text-center flex items-center justify-center">
-                  <span className="w-4 h-4 bg-brand-green-500 rounded-full mr-4 animate-pulse shadow-lg shadow-brand-green-500/50"></span>
-                  <span className="text-brand-green-400">Students Missing Clockify Entry</span>
-                  <span className="text-brand-green-300 ml-2">TODAY</span>
-                  <span className="w-4 h-4 bg-brand-green-500 rounded-full ml-4 animate-pulse shadow-lg shadow-brand-green-500/50"></span>
-                </h2>
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-2 h-2 bg-brand-green-500 rounded-full animate-pulse shadow shadow-brand-green-500/50"></span>
+                <span className="text-sm font-semibold text-brand-green-400">Missing Clockify Entry Today</span>
               </div>
 
               {initialLoad || loading ? (
